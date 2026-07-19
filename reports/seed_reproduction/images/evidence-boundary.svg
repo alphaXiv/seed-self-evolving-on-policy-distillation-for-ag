@@ -27,7 +27,7 @@
     <rect x="780" y="105" width="285" height="210" rx="18" fill="#fff0ef" stroke="#c9504d" stroke-width="2"/>
     <text x="922" y="145" text-anchor="middle" font-size="21" font-weight="700" fill="#8d2d2a">Observed evidence</text>
     <text x="922" y="195" text-anchor="middle" font-size="38" font-weight="700" fill="#8d2d2a">0 runs</text>
-    <text x="922" y="230" text-anchor="middle" font-size="16" fill="#674645">0 GPUs · 0.0 wall hours</text>
+    <text x="922" y="230" text-anchor="middle" font-size="16" fill="#674645">16-GPU allocation · 0.0 wall hours</text>
     <text x="922" y="265" text-anchor="middle" font-size="18" font-weight="700" fill="#8d2d2a">NOT REPRODUCED</text>
   </g>
   <text x="560" y="370" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="16" fill="#586579">A prepared protocol is not empirical confirmation; only terminal run logs can cross the evidence boundary.</text>

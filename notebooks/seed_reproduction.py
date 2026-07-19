@@ -60,7 +60,7 @@ def _(mo, paper_results_with_gains):
 def _():
     evidence = {
         "recorded_runs": 0,
-        "maximum_concurrent_gpus": 0,
+        "maximum_concurrent_gpus": 16,
         "actual_wall_hours": 0.0,
         "observed_alfworld_score": None,
         "verdict": "not-reproduced",

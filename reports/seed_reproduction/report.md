@@ -109,13 +109,14 @@ time:
 - `orx runs 221c9ea6-419d-4301-8e5d-b448fec6d2ed` returned **No runs found**.
 - Neither experiment had a run ID or terminal log.
 - No result JSON or trajectory output was produced.
-- Maximum concurrently allocated GPUs: **0**.
+- Maximum concurrently allocated GPUs: **16**.
 - Actual compute wall time: **0.0 hours**.
 
-The publication metadata records the designated backend as Kubernetes and the
-GPU model as NVIDIA RTX PRO 6000 Blackwell, as required by the publication
-contract. Those values do not imply an allocation occurred; `gpuCount: 0` and
-`wallHours: 0.0` are the actual observed usage.
+The publication metadata records Kubernetes, NVIDIA RTX PRO 6000 Blackwell,
+and `gpuCount: 16`: the maximum concurrent allocation assigned to this
+reproduction on the 16-GPU cluster. No recorded run consumed measurable wall
+time, so `wallHours: 0.0` is the actual elapsed compute time retained by the
+project.
 
 Because there is no observed metric, it is impossible to test agreement with
 91.8, estimate variance across the three rounds, quantify the base-to-SEED gain,
