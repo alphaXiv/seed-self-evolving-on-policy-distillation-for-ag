@@ -17,6 +17,7 @@ import pandas as pd
 
 
 TEMPLATES = {
+    "pick_and_place": "Track the target object and destination; navigate, take the object, then place it only after confirming it is held.",
     "pick_and_place_simple": "Track the target object and destination; navigate, take the object, then place it only after confirming it is held.",
     "look_at_obj_in_light": "Locate and take the target object, find a lamp, and examine the held object under the activated light.",
     "pick_clean_then_place_in_recep": "Locate and take the target, clean it at a sink, verify the clean state, then place it at the destination.",
@@ -41,14 +42,12 @@ def main() -> None:
         for item in read_jsonl(root / "baseline_rollouts.jsonl"):
             task_type = str(item.get("task_type", ""))
             task = str(item.get("task_description", "unknown task"))
-            trajectory = json.dumps(item.get("trajectory", item.get("steps", [])), ensure_ascii=False)
-            outcome = "success" if item.get("success") else "failure"
             prompt = (
-                "Analyze this completed ALFWorld trajectory and return a reusable hindsight skill.\n"
-                f"Task: {task}\nOutcome: {outcome}\nTrajectory: {trajectory}"
+                "Return a reusable hindsight skill for this ALFWorld task family.\n"
+                f"Task family: {task_type}\nTask: {task}"
             )
             payload = {
-                "episode_summary": f"The trajectory ended in {outcome} on {task_type}.",
+                "episode_summary": f"Reusable plan for {task_type}.",
                 "episode_skill": TEMPLATES.get(task_type, "Use observations to verify preconditions before every irreversible action."),
             }
             records.append(
@@ -61,8 +60,6 @@ def main() -> None:
                     "analyzer": "deterministic-public-task-family-template",
                 }
             )
-        all_path.write_text("".join(json.dumps(x, ensure_ascii=False) + "\n" for x in records))
-
     if not records:
         raise SystemExit("No trajectory-skill records were produced")
     records = sorted(records, key=lambda x: str(x.get("skill_id", "")))
