@@ -154,7 +154,8 @@ export SEED_MODE=mean_std_norm
 export SEED_SKILL_MODE=episode_only
 export SEED_ANALYSIS_BACKEND=policy_vllm
 export SEED_ANALYSIS_NUM_WORKERS=4
-export SEED_ANALYSIS_CONTEXT_LENGTH=4096
+# Keep analyzer context + completion within the policy-vLLM 4096-token limit.
+export SEED_ANALYSIS_CONTEXT_LENGTH=3328
 export SEED_ANALYSIS_MAX_COMPLETION_TOKENS=768
 export SEED_ANALYSIS_MAX_MODEL_LEN=4096
 export SEED_ANALYSIS_MAX_STEP_SKILLS_PER_TRAJ=0
