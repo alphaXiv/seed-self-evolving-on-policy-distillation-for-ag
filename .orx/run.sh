@@ -70,7 +70,8 @@ fi
 git -C "$source_dir" fetch --depth 1 origin "$OFFICIAL_COMMIT"
 git -C "$source_dir" checkout --detach "$OFFICIAL_COMMIT"
 
-python3 -m pip install --upgrade pip setuptools wheel
+ln -sf "$(command -v python3)" /usr/local/bin/python
+python3 -m pip install --upgrade pip 'setuptools<80' wheel
 python3 -m pip install \
   "vllm==0.11.0" \
   "gymnasium==0.29.1" \
