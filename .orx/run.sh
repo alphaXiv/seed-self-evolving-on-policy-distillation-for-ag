@@ -54,6 +54,10 @@ python3 -m pip install \
   'tensordict>=0.8.0,<=0.10.0,!=0.9.0' \
   torchdata wandb packaging uvicorn fastapi gymnasium==0.29.1 \
   stable-baselines3==2.6.0 alfworld
+# The Blackwell-compatible vLLM image intentionally omits the training-only
+# FlashAttention Python package, while verl imports its padding helpers on CUDA.
+# Build it against the image's CUDA 12.8 / PyTorch 2.8 stack once per job.
+MAX_JOBS=8 python3 -m pip install flash-attn==2.8.3 --no-build-isolation
 python3 -m pip install -e "$official_dir" --no-deps
 alfworld-download -f
 
