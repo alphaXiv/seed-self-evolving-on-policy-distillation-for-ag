@@ -98,7 +98,7 @@ python3 scripts/sft/alfworld/pipeline.py \
   --output-dir "$sft_dir" --overwrite \
   --tasks-per-type "$SFT_TASKS_PER_TYPE" \
   --rollouts-per-task "$SFT_ROLLOUTS_PER_TASK" \
-  --validation-rollouts 1 --task-batch-size 12 --skill-batch-size 12 \
+  --task-batch-size 12 \
   --max-steps 15 --history-length 5 --seed 260714777 \
   --request-workers 12 --skill-gen-workers 12 \
   --policy-base-url http://127.0.0.1:60001/v1 --policy-api-key EMPTY \
@@ -107,7 +107,6 @@ python3 scripts/sft/alfworld/pipeline.py \
   --skill-base-url http://127.0.0.1:60001/v1 --skill-api-key EMPTY \
   --skill-model qwen3-1.7b --skill-temperature 0.0 \
   --skill-max-completion-tokens 768 \
-  --accept-min-delta-count 0 --accept-min-delta-rate -1.0 \
   --sft-val-ratio 0.2
 
 cleanup_vllm
