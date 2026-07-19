@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "paperId": "2607.14777",
+  "title": "SEED ALFWorld Checkpoint Reproduction",
+  "description": "A faithful ALFWorld evaluation package was prepared, but no run-log evidence was produced, so the paper's result was not reproduced.",
+  "verdict": "not-reproduced",
+  "reportPath": "reports/seed_reproduction/report.md",
+  "notebookPath": "notebooks/seed_reproduction.py",
+  "compute": {
+    "backend": "kubernetes",
+    "gpuModel": "NVIDIA RTX PRO 6000 Blackwell",
+    "gpuCount": 0,
+    "wallHours": 0.0
+  }
+}

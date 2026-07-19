@@ -26,3 +26,16 @@ This first round validates the released checkpoint's reported absolute
 ALFWorld performance and quantifies its improvement over the untrained base
 model. It does not by itself reproduce the paper's 160-update GRPO-versus-SEED
 training comparison; that is a later, substantially more expensive stage.
+
+## Publication artifacts
+
+The reproduction closed without a recorded training or evaluation run, so the
+public verdict is **not reproduced**. The package documents the implemented
+protocol, the exact evidence boundary, and the work required for a future
+empirical test.
+
+- [Detailed reproduction report](reports/seed_reproduction/report.md)
+- [Self-contained marimo notebook](notebooks/seed_reproduction.py)
+- [Open the notebook on Molab](https://molab.marimo.io/github/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/notebooks/seed_reproduction.py)
+
+[![Open in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/notebooks/seed_reproduction.py)
