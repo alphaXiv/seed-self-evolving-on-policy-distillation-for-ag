@@ -50,7 +50,8 @@ ln -sf "$(command -v python3)" /usr/local/bin/python
 python3 -m pip install --upgrade pip 'setuptools<80' wheel
 python3 -m pip install \
   accelerate codetiming datasets dill hydra-core liger-kernel pandas peft \
-  'pyarrow>=19.0.0' pybind11 pylatexenc 'ray[default]' 'tensordict<=0.6.2' \
+  'pyarrow>=19.0.0' pybind11 pylatexenc 'ray[default]>=2.41.0,<=2.50.0' \
+  'tensordict>=0.8.0,<=0.10.0,!=0.9.0' \
   torchdata wandb packaging uvicorn fastapi gymnasium==0.29.1 \
   stable-baselines3==2.6.0 alfworld
 python3 -m pip install -e "$official_dir" --no-deps
