@@ -65,10 +65,14 @@ def main() -> None:
 
     if not records:
         raise SystemExit("No trajectory-skill records were produced")
-    while len(records) < 10:
-        records.extend(records[: 10 - len(records)])
+    # verl's distributed SFT validator drops incomplete batches on each of the
+    # eight ranks. Keep the 12 distinct public trajectories, deterministically
+    # repeat them to a 40-row bounded corpus, and reserve exactly eight rows for
+    # validation so every rank receives one example.
+    while len(records) < 40:
+        records.extend(records[: 40 - len(records)])
     records = sorted(records, key=lambda x: str(x.get("skill_id", "")))
-    val_count = max(1, len(records) // 5)
+    val_count = 8
     pd.DataFrame(records[val_count:]).to_parquet(root / "sft_episode_skill_train.parquet", index=False)
     pd.DataFrame(records[:val_count]).to_parquet(root / "sft_episode_skill_val.parquet", index=False)
     metrics_path = root / "metrics.json"
@@ -79,4 +83,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
