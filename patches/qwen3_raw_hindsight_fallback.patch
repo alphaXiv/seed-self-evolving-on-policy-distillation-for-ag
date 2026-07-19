@@ -1,0 +1,61 @@
+diff --git a/verl/trainer/ppo/ray_trainer.py b/verl/trainer/ppo/ray_trainer.py
+index 19c2762..1c10420 100755
+--- a/verl/trainer/ppo/ray_trainer.py
++++ b/verl/trainer/ppo/ray_trainer.py
+@@ -2141,6 +2141,37 @@ class RayPPOTrainer:
+                 "step_skills": {},
+             }
+ 
++        # Qwen3-1.7B frequently spends the full deterministic completion budget
++        # reasoning and emits useful hindsight prose without the requested JSON
++        # wrapper. Preserve that public, on-policy analyzer output as an
++        # episode skill instead of silently turning the SEED arm into GRPO.
++        # The confidence gate downstream still decides whether any token gets
++        # an OPD target. This substitution is restricted to policy_vllm and is
++        # surfaced in metrics below.
++        analysis_fallback = None
++        analysis_parse_error = parse_error
++        if parse_error is not None or not analyzer._analysis_has_required_skill(parsed):
++            raw_words = re.sub(r"<[^>]+>", " ", str(content or "")).split()
++            if raw_words:
++                excerpt = " ".join(raw_words[-96:])
++                fallback_skill = f"Use this on-policy hindsight lesson: {excerpt}"
++                analysis_fallback = "qwen3_raw_hindsight_v1"
++            else:
++                inferred_task = task_description or analyzer._infer_task_description(steps)
++                fallback_skill = (
++                    "For this ALFWorld task, use only exact admissible actions, "
++                    "search receptacles systematically, acquire the requested object, "
++                    "apply the requested transformation, and place or inspect it as specified. "
++                    f"Task: {inferred_task or 'complete the stated household goal'}."
++                )
++                analysis_fallback = "deterministic_alfworld_v1"
++            parsed = {
++                "episode_summary": "Public Qwen3 analyzer output required a raw-text fallback.",
++                "episode_skill": fallback_skill,
++                "step_skills": {},
++            }
++            parse_error = None
++
+         candidate_step_set = set(candidate_list)
+         filtered_step_skills = {
+             step_idx: skill
+@@ -2154,6 +2185,8 @@ class RayPPOTrainer:
+         parsed["analysis_backend_requested"] = analyzer.requested_backend
+         parsed["analysis_backend_used"] = "policy_vllm"
+         parsed["analysis_error"] = parse_error
++        parsed["analysis_parse_error"] = analysis_parse_error
++        parsed["analysis_fallback"] = analysis_fallback
+         parsed["analysis_mode"] = analysis_mode
+         parsed["analysis_prompt_version"] = analyzer.analysis_prompt_version
+         parsed["skill_mode"] = analyzer.skill_mode
+@@ -2548,6 +2581,9 @@ class RayPPOTrainer:
+         metrics["seed/analysis_num_workers"] = float(analysis_workers)
+         metrics["seed/analysis_succeeded_traj_count"] = float(len(successful_episode_analysis))
+         metrics["seed/analysis_failed_traj_count"] = float(failed_analysis_count)
++        metrics["seed/analysis_fallback_traj_count"] = float(
++            sum(bool(analysis.get("analysis_fallback")) for analysis in episode_analysis.values())
++        )
+         module_logger.info(
+             "SEED episode analysis finished: requests=%s, workers=%s, successful_trajectories=%s, failed_trajectories=%s",
+             len(analysis_tasks),

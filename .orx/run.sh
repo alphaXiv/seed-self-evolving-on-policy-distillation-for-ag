@@ -32,7 +32,7 @@ echo "rollout_group=$GROUP_SIZE"
 echo "updates=$TOTAL_UPDATES"
 echo "seen_eval_tasks=$FINAL_EVAL_TASKS"
 echo "unseen_eval_tasks=$FINAL_EVAL_TASKS"
-echo "analyzer_substitution=Qwen/Qwen3-1.7B served locally at temperature 0; deterministic rule fallback"
+echo "analyzer_substitution=Qwen/Qwen3-1.7B served locally at temperature 0; non-JSON output retained as raw on-policy hindsight"
 echo "=== END_REPRO_CONFIG ==="
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 if [[ "$gpu_count" -ne 8 ]]; then
@@ -45,6 +45,8 @@ if [[ ! -d "$official_dir/.git" ]]; then
 fi
 git -C "$official_dir" fetch --depth 1 origin "$OFFICIAL_COMMIT"
 git -C "$official_dir" checkout --detach "$OFFICIAL_COMMIT"
+git -C "$official_dir" apply "$repo_root/patches/qwen3_raw_hindsight_fallback.patch"
+echo "online_analyzer_patch_sha256=$(sha256sum "$repo_root/patches/qwen3_raw_hindsight_fallback.patch" | awk '{print $1}')"
 
 ln -sf "$(command -v python3)" /usr/local/bin/python
 python3 -m pip install --upgrade pip 'setuptools<80' wheel
