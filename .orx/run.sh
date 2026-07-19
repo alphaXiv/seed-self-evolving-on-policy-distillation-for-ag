@@ -50,7 +50,8 @@ ln -sf "$(command -v python3)" /usr/local/bin/python
 python3 -m pip install --upgrade pip 'setuptools<80' wheel
 python3 -m pip install \
   accelerate codetiming datasets dill hydra-core liger-kernel pandas peft \
-  'pyarrow>=19.0.0' pybind11 pylatexenc 'ray[default]' 'tensordict<=0.6.2' \
+  'pyarrow>=19.0.0' pybind11 pylatexenc 'ray[default]>=2.41.0,<=2.50.0' \
+  'tensordict>=0.8.0,<=0.10.0,!=0.9.0' \
   torchdata wandb packaging uvicorn fastapi gymnasium==0.29.1 \
   stable-baselines3==2.6.0 alfworld
 python3 -m pip install -e "$official_dir" --no-deps
@@ -97,7 +98,7 @@ python3 scripts/sft/alfworld/pipeline.py \
   --output-dir "$sft_dir" --overwrite \
   --tasks-per-type "$SFT_TASKS_PER_TYPE" \
   --rollouts-per-task "$SFT_ROLLOUTS_PER_TASK" \
-  --validation-rollouts 1 --task-batch-size 12 --skill-batch-size 12 \
+  --task-batch-size 12 \
   --max-steps 15 --history-length 5 --seed 260714777 \
   --request-workers 12 --skill-gen-workers 12 \
   --policy-base-url http://127.0.0.1:60001/v1 --policy-api-key EMPTY \
@@ -106,7 +107,6 @@ python3 scripts/sft/alfworld/pipeline.py \
   --skill-base-url http://127.0.0.1:60001/v1 --skill-api-key EMPTY \
   --skill-model qwen3-1.7b --skill-temperature 0.0 \
   --skill-max-completion-tokens 768 \
-  --accept-min-delta-count 0 --accept-min-delta-rate -1.0 \
   --sft-val-ratio 0.2
 
 cleanup_vllm
