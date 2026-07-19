@@ -45,6 +45,8 @@ if [[ ! -d "$official_dir/.git" ]]; then
 fi
 git -C "$official_dir" fetch --depth 1 origin "$OFFICIAL_COMMIT"
 git -C "$official_dir" checkout --detach "$OFFICIAL_COMMIT"
+python3 "$repo_root/.orx/patch_online_analyzer.py" \
+  "$official_dir/verl/trainer/ppo/ray_trainer.py"
 
 ln -sf "$(command -v python3)" /usr/local/bin/python
 python3 -m pip install --upgrade pip 'setuptools<80' wheel
