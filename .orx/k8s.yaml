@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed-train-{{ORX_RUN}}
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: run
+          image: vllm/vllm-openai:v0.11.0
+          command: ["bash", "-c", "eval \"$ORX_SCRIPT\""]
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            requests:
+              nvidia.com/gpu: "8"
+              cpu: "96"
+              memory: 700Gi
+              ephemeral-storage: 600Gi
+            limits:
+              nvidia.com/gpu: "8"
+              cpu: "120"
+              memory: 900Gi
+              ephemeral-storage: 750Gi
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Gi

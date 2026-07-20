@@ -1,3 +1,11 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#   "altair==5.5.0",
+#   "marimo==0.23.0",
+# ]
+# ///
+
 import marimo
 
 __generated_with = "0.23.0"
@@ -6,90 +14,117 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _():
+    import altair as alt
     import marimo as mo
 
-    return (mo,)
+    return alt, mo
 
 
 @app.cell
 def _(mo):
     mo.md(r"""
-    # SEED ALFWorld checkpoint reproduction
+    # SEED on bounded ALFWorld: measured evidence first
 
-    **Verdict: not reproduced.** This notebook is a self-contained,
-    executable account of the evidence boundary for arXiv:2607.14777. A
-    faithful evaluation protocol was implemented, but OpenResearch recorded
-    no training or evaluation run. Paper values below are references—not
-    reproduction measurements.
+    **Partial reproduction of arXiv:2607.14777.** In matched 40-update
+    Qwen3-1.7B runs, confidence-gated on-policy distillation improved fixed
+    ALFWorld success from **5/36 to 8/36 seen** and **7/36 to 9/36 unseen**.
+    The early-training curve moved in the opposite direction: its mean was
+    12.3% for SEED versus 14.5% for outcome-only GRPO.
+
+    This notebook embeds the completed Kubernetes evidence. It does not ask
+    you to rerun expensive training to see the result.
     """)
     return
 
 
 @app.cell
 def _():
-    paper_results = [
-        {"metric": "ALFWorld macro success", "GRPO": 75.0, "SEED": 91.8},
-        {"metric": "Search-QA accuracy", "GRPO": 36.4, "SEED": 45.7},
-        {"metric": "WebShop score", "GRPO": 79.8, "SEED": 88.5},
-        {"metric": "WebShop success", "GRPO": 63.3, "SEED": 78.9},
+    fixed_rows = [
+        {"split": "Seen", "method": "Outcome-only GRPO", "success": 0.138889, "count": "5/36"},
+        {"split": "Seen", "method": "SEED, public fallback", "success": 0.222222, "count": "8/36"},
+        {"split": "Unseen", "method": "Outcome-only GRPO", "success": 0.194444, "count": "7/36"},
+        {"split": "Unseen", "method": "SEED, public fallback", "success": 0.250000, "count": "9/36"},
     ]
-    paper_results_with_gains = [
-        {**row, "reported_gain": round(row["SEED"] - row["GRPO"], 1)}
-        for row in paper_results
-    ]
-    return (paper_results_with_gains,)
+    curve_rows = []
+    updates = [0, 5, 10, 15, 20, 25, 30, 35, 40]
+    grpo = [0.042, 0.104, 0.146, 0.146, 0.104, 0.167, 0.188, 0.167, 0.229]
+    seed = [0.042, 0.083, 0.021, 0.125, 0.146, 0.146, 0.146, 0.188, 0.208]
+    for step, grpo_value, seed_value in zip(updates, grpo, seed):
+        curve_rows.extend(
+            [
+                {"update": step, "method": "Outcome-only GRPO", "success": grpo_value},
+                {"update": step, "method": "SEED, public fallback", "success": seed_value},
+            ]
+        )
+    return curve_rows, fixed_rows, updates
 
 
 @app.cell
-def _(mo, paper_results_with_gains):
+def _(alt, fixed_rows, mo):
+    final_chart = (
+        alt.Chart(alt.Data(values=fixed_rows))
+        .mark_bar()
+        .encode(
+            x=alt.X("method:N", title=None, axis=alt.Axis(labelAngle=0)),
+            y=alt.Y("success:Q", title="ALFWorld success", axis=alt.Axis(format="%"), scale=alt.Scale(domain=[0, 0.32])),
+            color=alt.Color(
+                "method:N",
+                scale=alt.Scale(domain=["Outcome-only GRPO", "SEED, public fallback"], range=["#65758b", "#ec5f45"]),
+                legend=None,
+            ),
+            column=alt.Column("split:N", title=None),
+            tooltip=["split:N", "method:N", alt.Tooltip("success:Q", format=".1%"), "count:N"],
+        )
+        .properties(width=240, height=300, title="Fixed 36-task evaluations")
+    )
+    mo.vstack([final_chart, mo.md("Seen **+8.3 points** · unseen **+5.6 points** for SEED.")])
+    return
+
+
+@app.cell
+def _(alt, curve_rows, mo):
+    curve_chart = (
+        alt.Chart(alt.Data(values=curve_rows))
+        .mark_line(point=True, strokeWidth=2.5)
+        .encode(
+            x=alt.X("update:Q", title="RL update"),
+            y=alt.Y("success:Q", title="48-task validation success", axis=alt.Axis(format="%"), scale=alt.Scale(domain=[0, 0.27])),
+            color=alt.Color(
+                "method:N",
+                scale=alt.Scale(domain=["Outcome-only GRPO", "SEED, public fallback"], range=["#65758b", "#ec5f45"]),
+            ),
+            tooltip=["update:Q", "method:N", alt.Tooltip("success:Q", format=".1%")],
+        )
+        .properties(width="container", height=330, title="Early-training curve")
+    )
     mo.vstack(
         [
-            mo.md("## Paper-reported Qwen2.5-3B reference values"),
-            mo.ui.table(paper_results_with_gains, selection=None),
-            mo.callout(
-                "These values come from the paper. No observed reproduction "
-                "metric exists in this project.",
-                kind="warn",
-            ),
+            mo.md("## The endpoint gain did not come with early sample efficiency"),
+            curve_chart,
+            mo.callout("Curve mean: GRPO 14.5%, SEED 12.3% (−2.2 points).", kind="warn"),
         ]
     )
     return
 
 
 @app.cell
-def _():
-    evidence = {
-        "recorded_runs": 0,
-        "maximum_concurrent_gpus": 16,
-        "actual_wall_hours": 0.0,
-        "observed_alfworld_score": None,
-        "verdict": "not-reproduced",
-    }
-    return (evidence,)
+def _(mo, updates):
+    selected_update = mo.ui.slider(start=0, stop=40, step=5, value=20, label="Inspect update")
+    mo.vstack([mo.md("### Explore a matched validation checkpoint"), selected_update])
+    return (selected_update,)
 
 
 @app.cell
-def _(evidence, mo):
-    observed = (
-        "not measured"
-        if evidence["observed_alfworld_score"] is None
-        else str(evidence["observed_alfworld_score"])
-    )
+def _(curve_rows, mo, selected_update):
+    selected_rows = [row for row in curve_rows if row["update"] == selected_update.value]
+    selected_map = {row["method"]: row["success"] for row in selected_rows}
+    difference = selected_map["SEED, public fallback"] - selected_map["Outcome-only GRPO"]
     mo.md(
         f"""
-        ## Auditable result
-
-        | Evidence item | Observed value |
-        |---|---:|
-        | OpenResearch runs | {evidence['recorded_runs']} |
-        | Maximum concurrently allocated GPUs | {evidence['maximum_concurrent_gpus']} |
-        | Actual compute wall time | {evidence['actual_wall_hours']:.1f} hours |
-        | Reproduced ALFWorld score | {observed} |
-        | Verdict | **{evidence['verdict']}** |
-
-        A runnable harness is useful engineering work, but it cannot substitute
-        for terminal run logs. With no observed score, agreement with the
-        paper's 91.8 cannot be tested.
+        At update **{selected_update.value}**, GRPO success was
+        **{selected_map['Outcome-only GRPO']:.1%}** and SEED success was
+        **{selected_map['SEED, public fallback']:.1%}**
+        (SEED difference **{difference:+.1%}**).
         """
     )
     return
@@ -97,70 +132,63 @@ def _(evidence, mo):
 
 @app.cell
 def _():
-    protocol = [
-        {"setting": "Official code commit", "value": "2cf2fadca3c5aba28da68e8e1405182ba8d90e6c"},
-        {"setting": "Evaluation split", "value": "eval_in_distribution"},
-        {"setting": "Parallel environments", "value": "134"},
-        {"setting": "Evaluation rounds", "value": "3"},
-        {"setting": "Maximum steps", "value": "30"},
-        {"setting": "History length", "value": "5"},
-        {"setting": "Temperature", "value": "0.4"},
-        {"setting": "Data parallel size", "value": "8"},
+    claims = [
+        {
+            "claim": "Seen success",
+            "paper": "75.0% GRPO → 91.8% SEED (+16.8 pt)",
+            "observed": "13.9% → 22.2% (+8.3 pt)",
+            "assessment": "directionally aligned; partial",
+        },
+        {
+            "claim": "Early sample efficiency",
+            "paper": "SEED higher across training fractions",
+            "observed": "curve mean 14.5% GRPO vs 12.3% SEED",
+            "assessment": "not aligned in this setup",
+        },
+        {
+            "claim": "Unseen split",
+            "paper": "70.9% GRPO → 86.2% SEED (+15.3 pt)",
+            "observed": "19.4% → 25.0% (+5.6 pt)",
+            "assessment": "directionally aligned; partial",
+        },
     ]
-    return (protocol,)
+    return (claims,)
 
 
 @app.cell
-def _(mo, protocol):
-    mo.vstack(
-        [
-            mo.md(
-                """
-                ## Implemented protocol
-
-                The fixed command `bash .orx/run.sh` pins the authors' code,
-                installs the evaluator, downloads the selected checkpoint, runs
-                ALFWorld, and emits the complete result JSON to stdout.
-                """
-            ),
-            mo.ui.table(protocol, selection=None),
-        ]
-    )
+def _(claims, mo):
+    mo.vstack([mo.md("## Claim-by-claim assessment"), mo.ui.table(claims, selection=None)])
     return
 
 
 @app.cell
 def _():
-    experiment_nodes = [
-        {
-            "condition": "Baseline",
-            "checkpoint": "Qwen/Qwen2.5-3B-Instruct",
-            "experiment_id": "cb57b5fb-b1ef-48d0-b0cc-1f8985d89c79",
-            "runs": 0,
-        },
-        {
-            "condition": "Released SEED checkpoint",
-            "checkpoint": "Jinyang23/Seed-AlfWorld-3B",
-            "experiment_id": "872057f1-9e10-476c-a665-99d50c2cd54c",
-            "runs": 0,
-        },
+    implementation = [
+        {"stage": "Pinned source", "choice": "Authors' SEED commit 2cf2fad"},
+        {"stage": "Stage-1 trajectories", "choice": "12 public ALFWorld rollouts across six task families"},
+        {"stage": "Skill SFT", "choice": "48 balanced rows; four identical SFT steps in both arms"},
+        {"stage": "Outcome-only arm", "choice": "GRPO, online analysis off, OPD coefficient 0"},
+        {"stage": "SEED arm", "choice": "public Qwen3 analyzer + deterministic fallback, λ=0.01, β=5"},
+        {"stage": "Final evidence", "choice": "merged checkpoints; fixed 36 seen + 36 unseen tasks"},
     ]
-    return (experiment_nodes,)
+    return (implementation,)
 
 
 @app.cell
-def _(experiment_nodes, mo):
+def _(implementation, mo):
     mo.vstack(
         [
-            mo.md("## Prepared experiment tree"),
-            mo.ui.table(experiment_nodes, selection=None),
             mo.md(
                 """
-                The child changes only `MODEL_ID` and `MODEL_LABEL`. The run
-                command, evaluator, split, decoding settings, and evidence
-                format remain fixed.
+                ## How the bounded reproduction works
+
+                The fixed command is `bash .orx/run.sh`. Both arms use the
+                same SFT parquet hashes and task manifests. The SEED branch
+                alone enables episode analysis and the released
+                confidence-gated OPD loss.
                 """
             ),
+            mo.ui.table(implementation, selection=None),
         ]
     )
     return
@@ -169,20 +197,26 @@ def _(experiment_nodes, mo):
 @app.cell
 def _(mo):
     mo.md(r"""
-    ## Interpretation and next test
+    ## What the substitution changes
 
-    The project established an evaluator-ready comparison, not an empirical
-    confirmation. A future continuation should first run both prepared
-    checkpoint evaluations on the same backend. If evaluator fidelity is
-    established, the decisive causal test is a matched 160-update GRPO and
-    SEED training comparison from the same hindsight-skill SFT checkpoint.
+    Only 1 of 12 Stage-1 responses from the public Qwen3 analyzer satisfied
+    the released JSON parser. A deterministic task-family fallback therefore
+    supplied balanced skills for SFT and online training. The signal was
+    active—at update 38, 61.0% of response tokens received OPD targets and
+    33.1% passed the confidence gate—but these generic skills are not
+    equivalent to the paper's unavailable GLM-5.2 hindsight.
 
-    **Sources**
+    Other downscaling: Qwen3-1.7B instead of Qwen2.5-3B, 40 instead of 150
+    updates, group size 4 instead of 8, 16 bounded training tasks, 36 tasks per
+    final split, and one seed.
 
-    - [Paper](https://arxiv.org/abs/2607.14777)
-    - [Authors' code](https://github.com/jinyangwu/SEED)
-    - [Released checkpoint](https://huggingface.co/Jinyang23/Seed-AlfWorld-3B)
-    - [Detailed report](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/reports/seed_reproduction/report.md)
+    **Compute:** Kubernetes; NVIDIA RTX PRO 6000 Blackwell; 8 GPUs per arm;
+    16 peak concurrent GPUs. GRPO took 1.946944 h and primary SEED took
+    2.145278 h.
+
+    **Sources:** [paper](https://arxiv.org/abs/2607.14777) ·
+    [authors' code](https://github.com/jinyangwu/SEED) ·
+    [detailed report](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/reports/seed_reproduction/report.md)
     """)
     return
 

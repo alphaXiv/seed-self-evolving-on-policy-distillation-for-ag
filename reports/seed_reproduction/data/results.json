@@ -1,0 +1,42 @@
+{
+  "paper": {
+    "model": "Qwen2.5-3B",
+    "seen": {"grpo": 0.750, "seed": 0.918},
+    "unseen": {"grpo": 0.709, "seed": 0.862},
+    "updates": 150
+  },
+  "bounded_training": {
+    "model": "Qwen3-1.7B",
+    "updates": [0, 5, 10, 15, 20, 25, 30, 35, 40],
+    "trainer_validation": {
+      "grpo": [0.042, 0.104, 0.146, 0.146, 0.104, 0.167, 0.188, 0.167, 0.229],
+      "seed_deterministic": [0.042, 0.083, 0.021, 0.125, 0.146, 0.146, 0.146, 0.188, 0.208]
+    },
+    "curve_mean": {"grpo": 0.1447, "seed_deterministic": 0.1225},
+    "fixed_evaluation": {
+      "seen": {
+        "grpo": {"successes": 5, "tasks": 36, "rate": 0.138889},
+        "seed_deterministic": {"successes": 8, "tasks": 36, "rate": 0.222222}
+      },
+      "unseen": {
+        "grpo": {"successes": 7, "tasks": 36, "rate": 0.194444},
+        "seed_deterministic": {"successes": 9, "tasks": 36, "rate": 0.250000}
+      }
+    }
+  },
+  "checkpoint_sanity": {
+    "base_qwen2_5_3b": {"overall": 0.136816, "category_macro": 0.158098},
+    "released_seed": {"overall": 0.898010, "category_macro": 0.892826}
+  },
+  "provenance": {
+    "control_run": "a1bacf8d-0236-44dc-be84-0fd681ffbf3e",
+    "seed_run": "43c2689e-c47c-4f22-bad1-9abd7783ff35",
+    "base_checkpoint_run": "217bfba7-b913-474e-9f56-fc5aaa794f26",
+    "released_checkpoint_run": "a4f40199-2091-43dc-8f95-e7528b86d279",
+    "fixed_command": "bash .orx/run.sh",
+    "backend": "kubernetes",
+    "gpu_model": "NVIDIA RTX PRO 6000 Blackwell",
+    "peak_concurrent_gpus": 16,
+    "elapsed_seconds": {"control": 7009, "seed_deterministic": 7723, "base_checkpoint": 526, "released_checkpoint": 400}
+  }
+}

@@ -1,179 +1,93 @@
-# SEED ALFWorld Checkpoint Reproduction
+# SEED on bounded ALFWorld: a partial reproduction
 
-## Executive summary
+![Fixed seen and unseen ALFWorld success](images/final_split_success.png)
 
-This project attempted to reproduce the ALFWorld result from **SEED:
-Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning**
-(arXiv:2607.14777). The authors report a 91.8 ALFWorld macro-average for SEED
-with Qwen2.5-3B-Instruct, versus 75.0 for their matched GRPO control. We built a
-public, pinned evaluation harness around the authors' code and released
-checkpoint, but no training or evaluation run was recorded by OpenResearch.
+**Assessment: partially reproduced.** On matched 40-update Qwen3-1.7B runs, confidence-gated on-policy distillation improved fixed seen-split ALFWorld success from 5/36 to 8/36 (+8.3 percentage points) and unseen-split success from 7/36 to 9/36 (+5.6 points). Those directions agree with the paper, but the early-training curve favored outcome-only GRPO by 2.2 points on average. The experiment is deliberately smaller than the paper and substitutes a public Qwen3 analyzer plus deterministic fallback for the unavailable GLM-5.2 annotations.
 
-**Verdict: not reproduced.** The experimental protocol is implementation-ready,
-but there is no run log from which to calculate an observed success rate,
-uncertainty interval, or comparison. The absence of evidence is reported as
-such; paper values are never presented as reproduction measurements.
+[![Open in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/notebooks/seed_reproduction.py)
 
-![Evidence boundary for this reproduction](images/evidence-boundary.svg)
+The [self-contained Molab notebook](https://molab.marimo.io/github/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/notebooks/seed_reproduction.py) opens directly from the public repository with the measured evidence embedded.
 
-## What the paper claims
+## Central question
 
-SEED addresses sparse outcome supervision in long-horizon agentic reinforcement
-learning. A single evolving checkpoint serves two roles: it acts to collect
-on-policy trajectories and analyzes completed trajectories into natural-language
-hindsight skills. Sampled action tokens are re-scored with and without the skill
-context. A detached skill-induced log-probability shift gates a dense
-on-policy-distillation loss, which is optimized jointly with group-relative RL.
-At deployment, the policy acts without a skill prompt.
+SEED asks whether an agent can turn hindsight about its own trajectories into dense token-level learning targets, instead of learning only from a sparse task outcome. The paper reports that this confidence-gated on-policy distillation raises Qwen2.5-3B ALFWorld success from 75.0% with outcome-only GRPO to 91.8% with SEED, improves the learning curve, and retains a +15.3-point advantage on unseen tasks.
 
-The paper's main aggregate Qwen2.5-3B results include:
+This reproduction tests the causal comparison rather than only re-running the authors' final checkpoint: both arms start from the same Qwen3-1.7B base, use byte-identical public skill-SFT data, see the same bounded training and validation task manifests, and differ only in whether the online analyzer and OPD loss are enabled.
 
-| Benchmark metric | GRPO | SEED | Reported gain |
-|---|---:|---:|---:|
-| ALFWorld macro-average success | 75.0 | 91.8 | +16.8 points |
-| Search-QA average accuracy | 36.4 | 45.7 | +9.3 points |
-| WebShop score | 79.8 | 88.5 | +8.7 points |
-| WebShop success | 63.3 | 78.9 | +15.6 points |
+## What ran
 
-These are **paper-reported reference values**, not outputs of this project.
+| Item | Paper | Bounded reproduction |
+|---|---:|---:|
+| Base model | Qwen2.5-3B | Qwen3-1.7B |
+| RL updates | 150 | 40 |
+| Training batch / group | 16 / 8 | 16 / 4 |
+| Fixed final evaluation | full reported benchmark | 36 seen + 36 unseen tasks |
+| Maximum environment steps | 30 | 30 |
+| OPD coefficient / gate beta | 0.01 / 5 | 0.01 / 5 |
+| Analyzer | GLM-5.2 annotations | public Qwen3 policy + deterministic task-family fallback |
+| Compute | 8 × A800 | Kubernetes; 8 GPUs per arm, 16 peak concurrent NVIDIA RTX PRO 6000 Blackwell GPUs |
 
-## Reproduction question
+The outcome-only run took **7,009 seconds (1.946944 h)** and the primary SEED run took **7,723 seconds (2.145278 h)**. Both ran on Kubernetes with 8 NVIDIA RTX PRO 6000 Blackwell GPUs. The two arms overlapped, and the run history records **16 GPUs requested concurrently**.
 
-The prepared first round asks a narrower, prerequisite question:
+## Implementation
 
-> Does the authors' released `Jinyang23/Seed-AlfWorld-3B` checkpoint recover its
-> reported 91.8 ALFWorld result under the authors' own public evaluator, and how
-> much does it improve over the untrained Qwen2.5-3B-Instruct backbone under the
-> same protocol?
+The public harness pins the authors' implementation at commit `2cf2fadca3c5aba28da68e8e1405182ba8d90e6c`. The fixed command is `bash .orx/run.sh`; configuration changes live in committed files, never command-line variants.
 
-This round would validate checkpoint and evaluator fidelity. It would not, by
-itself, establish the stronger causal claim that the SEED training objective
-outperforms a matched 160-update GRPO run.
+The consequential code path is short:
 
-## Implemented protocol
+1. `.orx/run.sh` installs the pinned SEED code and ALFWorld, prepares public data, runs the shared SFT phase, launches the selected RL arm, merges the final FSDP checkpoint, and prints both final evaluation JSON blocks into the terminal log.
+2. `.orx/ensure_sft_data.py` makes Stage 1 reproducible when the public analyzer output is sparse or malformed. Twelve rollouts cover all six ALFWorld task families; only 1/12 analyzer responses parsed, so deterministic task-family skills produced a balanced 48-row SFT set.
+3. `.orx/patch_online_analyzer.py` applies the same documented fallback online. In the primary SEED arm, every update yielded 64/64 usable episode analyses instead of silently disabling the auxiliary signal.
+4. `.orx/training.conf` selects `METHOD=seed`, `OPD_LOSS_COEF=0.01`, and 40 updates. The GRPO child changes the method and disables analysis/OPD while inheriting every other setting.
 
-The repository pins the authors' official SEED implementation at commit
-`2cf2fadca3c5aba28da68e8e1405182ba8d90e6c`. The fixed command on both experiment
-nodes is:
+The SFT artifact was identical across the causal arms: the train parquet SHA-256 was `b143c4af9fb5b71c76bbbd5c814ee85cebd2746355573db55fbcf4b723f8367f`, and validation was `8c485d485d01feaa8ef0f0f87574b18d7a9775cccd96f5716df423f11b1d0fd1`. Four SFT steps reduced training loss from 5.033 to 3.988; validation loss was 3.900.
 
-```bash
-bash .orx/run.sh
-```
+The SEED run exercised a real auxiliary path. At update 38, for example, it formed 1,767 teacher-token targets, the OPD active-token ratio was 0.610, the confidence-gate active ratio was 0.331, and OPD loss was 0.024 at coefficient 0.01. The matched GRPO log reports all corresponding teacher and OPD metrics as zero.
 
-The harness performs the following reproducible steps:
+## Results
 
-1. Print the full tracked configuration and visible GPU count.
-2. Clone the official repository and detach at the pinned commit.
-3. Install vLLM 0.11.0, ALFWorld, and the upstream package.
-4. Download the configured Hugging Face checkpoint.
-5. Run the official `local_vllm_alfworld.py` evaluator.
-6. Print the complete result JSON between explicit evidence markers so the
-   OpenResearch log contains aggregate and task-family metrics.
+### Claim 1: seen ALFWorld success
 
-The frozen evaluation settings are:
+| Evidence | Outcome-only GRPO | SEED | Difference | Assessment |
+|---|---:|---:|---:|---|
+| Paper, Qwen2.5-3B | 75.0% | 91.8% | +16.8 pt | paper reference |
+| Fixed seen tasks, Qwen3-1.7B | 13.9% (5/36) | 22.2% (8/36) | **+8.3 pt** | directionally aligned; partial |
 
-| Setting | Value |
-|---|---|
-| Split | `eval_in_distribution` |
-| Parallel environments | 134 |
-| Evaluation rounds | 3 |
-| Environment seed | 1 |
-| Maximum steps | 30 |
-| Prompt history | 5 observations |
-| Temperature | 0.4 |
-| Maximum completion tokens | 512 |
-| Tensor parallel size | 1 |
-| Data parallel size | 8 |
-| vLLM GPU-memory utilization | 0.6 |
+The bounded run shows the claimed direction at roughly half the paper's reported gain. With only 36 fixed tasks and one training seed, the descriptive standard error of the between-arm difference is about 9 points; this run establishes a positive measured effect under the selected manifest, not a precise population estimate.
 
-## Experiment tree and controlled difference
+### Claim 2: early sample efficiency
 
-![Prepared experiment tree](images/experiment-tree.svg)
+![Trainer-validation learning curve](images/training_curve.png)
 
-The OpenResearch tree contains two nodes:
+The paper's SEED curve is higher throughout its reported training fractions. Here, the trapezoidal mean of the 48-task trainer-validation curve was **14.5% for GRPO and 12.3% for SEED** (−2.2 points). SEED briefly led at updates 20 and 35, then ended at 20.8% versus 22.9% for GRPO. Under this bounded setup, the early-efficiency part of the claim is **not aligned**.
 
-| Experiment | ID | Branch | Checkpoint | Recorded runs |
-|---|---|---|---|---:|
-| Baseline | `cb57b5fb-b1ef-48d0-b0cc-1f8985d89c79` | `orx/baseline` | `Qwen/Qwen2.5-3B-Instruct` | 0 |
-| Released SEED checkpoint | `872057f1-9e10-476c-a665-99d50c2cd54c` | `orx/released-seed-checkpoint` | `Jinyang23/Seed-AlfWorld-3B` | 0 |
+These validation points use temperature 0.4 and are noisy; the fixed final task manifests below are the stronger endpoint evidence.
 
-The SEED child differs from the immutable root by only two values in the tracked
-configuration: `MODEL_ID` and `MODEL_LABEL`. The command and environment
-contract are identical.
+### Claim 3: held-out ALFWorld split
 
-## Evidence and result
+| Evidence | Outcome-only GRPO | SEED | Difference | Assessment |
+|---|---:|---:|---:|---|
+| Paper unseen split | 70.9% | 86.2% | +15.3 pt | paper reference |
+| Fixed unseen tasks | 19.4% (7/36) | 25.0% (9/36) | **+5.6 pt** | directionally aligned; partial |
 
-OpenResearch local mode treats run logs as the evidence channel. At publication
-time:
+The positive effect survives the held-out split, but is smaller than the paper's and uncertain at this task count. The result should be read as evidence from the specified Qwen3-1.7B/public-analyzer substitution, not as an estimate of the original GLM-annotated 150-update experiment.
 
-- `orx runs 221c9ea6-419d-4301-8e5d-b448fec6d2ed` returned **No runs found**.
-- Neither experiment had a run ID or terminal log.
-- No result JSON or trajectory output was produced.
-- Maximum concurrently allocated GPUs: **16**.
-- Actual compute wall time: **0.0 hours**.
+## Evaluator fidelity check
 
-The publication metadata records Kubernetes, NVIDIA RTX PRO 6000 Blackwell,
-and `gpuCount: 16`: the maximum concurrent allocation assigned to this
-reproduction on the 16-GPU cluster. No recorded run consumed measurable wall
-time, so `wallHours: 0.0` is the actual elapsed compute time retained by the
-project.
+Before causal training, the same official ALFWorld evaluator compared the authors' released `Jinyang23/Seed-AlfWorld-3B` checkpoint with `Qwen/Qwen2.5-3B-Instruct`. Category-macro success was **89.3%** for the released checkpoint versus **15.8%** for base. The released result is 2.5 points below the paper's 91.8%, supporting evaluator fidelity while leaving normal decoding and subset variance. These were successful Kubernetes runs lasting 6m40s and 8m46s on 8 GPUs each.
 
-Because there is no observed metric, it is impossible to test agreement with
-91.8, estimate variance across the three rounds, quantify the base-to-SEED gain,
-or diagnose per-task-family behavior. The only defensible scientific verdict is
-**not reproduced**.
+## Evidence boundaries
 
-## What was established
+- The analyzer substitution is the largest fidelity gap. The public Qwen3 model usually emitted useful prose that did not satisfy the released JSON parser; deterministic task-family skills are less specific than the paper's GLM-5.2 hindsight.
+- The experiment uses 40 rather than 150 updates, group size 4 rather than 8, 16 bounded training tasks, one seed, and 36 tasks per final split.
+- Qwen3-1.7B is the requested smaller model; the paper's headline ALFWorld result uses Qwen2.5-3B.
+- Final checkpoints were evaluated inside their supervised Kubernetes jobs and the complete result JSON was preserved in OpenResearch terminal logs. No claim is made that the ephemeral training checkpoint itself was published.
+- All plotted values are transcribed in `data/results.json`; `plot_results.py` regenerates the figures. The source run identifiers remain in experiment descriptions and the data provenance block.
 
-Although the empirical claim remains untested, the setup work established:
+## Assessment
 
-- the authors released both official code and a final ALFWorld checkpoint;
-- the official evaluator exposes overall, category-macro, task-family,
-  action-format, and API-error metrics;
-- the evaluation can be expressed as a fixed-command, branch-controlled
-  comparison with a two-line experimental diff;
-- the final JSON can be emitted to stdout, closing the evidence gap that would
-  otherwise exist in local OpenResearch mode;
-- the first paired evaluation is structurally ready for eight GPUs per
-  condition, if compute is authorized in future work.
+The reproduction is **partial**: confidence-gated skill-induced OPD improved the fixed seen and unseen endpoints against matched outcome-only GRPO, but it did not improve the observed early-training curve. A full-scale reproduction still needs the original analyzer prompts/model (or a validated equivalent), Qwen2.5-3B, 150 updates, group size 8, broader task coverage, and multiple seeds.
 
-## Limitations
+Relevant branches: [matched GRPO control](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/outcome-only-grpo-with-validated-sft-shard), [primary deterministic-fallback SEED](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/seed-opd-with-deterministic-online-analyzer-fall), [released-checkpoint evaluator](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/released-seed-checkpoint), and [base-checkpoint evaluator](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/base-checkpoint-kubernetes-evaluation).
 
-1. **No empirical observation.** This dominates every other limitation.
-2. **Released checkpoint versus base model.** The prepared comparison is not the
-   paper's matched GRPO-versus-SEED training comparison.
-3. **Missing public Stage-1 initialization.** The authors released the final
-   SEED checkpoint, but this project did not locate a released hindsight-skill
-   SFT initialization or GRPO checkpoint.
-4. **No causal training test.** Reproducing the main claim requires constructing
-   the published 1,440-trajectory Stage-1 dataset and training matched GRPO and
-   SEED conditions from the same initialization.
-5. **No uncertainty estimate.** The planned three evaluation rounds were never
-   executed.
-
-## Recommended continuation
-
-Future work should proceed in two gated stages:
-
-1. Run the prepared base and released-checkpoint evaluations concurrently on
-   the same backend. Require complete evidence JSON, zero API-error rate, and
-   stable task-family counts before accepting evaluator fidelity.
-2. Only after that validation, reproduce Stage 1 and train matched GRPO and SEED
-   conditions from the same SFT checkpoint. The training comparison—not the
-   released-checkpoint evaluation—is the decisive test of the paper's causal
-   claim.
-
-## Public artifacts
-
-- Reproduction harness: `.orx/run.sh`
-- Tracked condition: `.orx/reproduction.conf`
-- Machine-readable metadata: `autoresearch.json`
-- Self-contained notebook: `notebooks/seed_reproduction.py`
-- Molab: <https://molab.marimo.io/github/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/blob/main/notebooks/seed_reproduction.py>
-
-## References
-
-1. Wu et al., *SEED: Self-Evolving On-Policy Distillation for Agentic
-   Reinforcement Learning*, arXiv:2607.14777, 2026.
-2. Authors' implementation: <https://github.com/jinyangwu/SEED>.
-3. Released checkpoint: <https://huggingface.co/Jinyang23/Seed-AlfWorld-3B>.
+Sources: [paper (arXiv:2607.14777)](https://arxiv.org/abs/2607.14777), [authors' code](https://github.com/jinyangwu/SEED), and [released checkpoint](https://huggingface.co/Jinyang23/Seed-AlfWorld-3B).
