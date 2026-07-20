@@ -163,6 +163,53 @@ def _(claims, mo):
 
 @app.cell
 def _():
+    sensitivities = [
+        {
+            "arm": "GRPO, 20 updates",
+            "seen": "6/36 (16.7%)",
+            "unseen": "6/36 (16.7%)",
+            "curve mean": "7.5%",
+        },
+        {
+            "arm": "SEED λ=0.001, 20 updates",
+            "seen": "8/36 (22.2%)",
+            "unseen": "7/36 (19.4%)",
+            "curve mean": "8.8%",
+        },
+        {
+            "arm": "SEED raw hindsight, 40 updates",
+            "seen": "6/36 (16.7%)",
+            "unseen": "6/36 (16.7%)",
+            "curve mean": "9.7%",
+        },
+    ]
+    return (sensitivities,)
+
+
+@app.cell
+def _(mo, sensitivities):
+    mo.vstack(
+        [
+            mo.md(
+                """
+                ## Sensitivity to λ and analyzer content
+
+                Lowering λ to 0.001 produced small positive differences over
+                a separately run, matched 20-update control. Preserving raw
+                unstructured Qwen3 prose at λ=0.01 was weaker than the primary
+                concise task-family fallback. The auxiliary path was active in
+                every SEED variant, so this is a content sensitivity—not an
+                accidentally disabled loss.
+                """
+            ),
+            mo.ui.table(sensitivities, selection=None),
+        ]
+    )
+    return
+
+
+@app.cell
+def _():
     implementation = [
         {"stage": "Pinned source", "choice": "Authors' SEED commit 2cf2fad"},
         {"stage": "Stage-1 trajectories", "choice": "12 public ALFWorld rollouts across six task families"},

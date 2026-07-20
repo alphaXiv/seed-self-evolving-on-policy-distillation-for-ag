@@ -72,6 +72,20 @@ These validation points use temperature 0.4 and are noisy; the fixed final task 
 
 The positive effect survives the held-out split, but is smaller than the paper's and uncertain at this task count. The result should be read as evidence from the specified Qwen3-1.7B/public-analyzer substitution, not as an estimate of the original GLM-annotated 150-update experiment.
 
+## Sensitivity checks
+
+Two completed variations probe whether the endpoint result depends on the auxiliary weight or on how malformed public-analyzer prose is converted to a skill.
+
+| Matched comparison | Seen success | Unseen success | Mean validation success | Interpretation |
+|---|---:|---:|---:|---|
+| Outcome-only GRPO, 20 updates | 16.7% (6/36) | 16.7% (6/36) | 7.5% | matched short control |
+| SEED λ=0.001, 20 updates | 22.2% (8/36) | 19.4% (7/36) | 8.8% | +5.6 pt seen, +2.8 pt unseen, +1.3 pt curve mean |
+| Outcome-only GRPO, 40 updates | 13.9% (5/36) | 19.4% (7/36) | 14.5% | primary control |
+| SEED deterministic fallback, 40 updates | 22.2% (8/36) | 25.0% (9/36) | 12.3% | strongest fixed endpoint |
+| SEED raw-hindsight fallback, 40 updates | 16.7% (6/36) | 16.7% (6/36) | 9.7% | weaker than the structured fallback |
+
+At 20 updates, the lower λ=0.001 signal improved both fixed endpoints and the mean validation curve over its matched outcome-only control. This is supportive but based on one short seed. At 40 updates, preserving the final 96 words of malformed Qwen3 hindsight produced only 6/36 successes on each split, versus 8/36 seen and 9/36 unseen for the concise deterministic task-family fallback. The raw arm still exercised OPD: at update 40, 1,773 teacher tokens were formed, 60/64 analyses used the raw fallback, 60.4% of response tokens were active, and 29.0% passed the confidence gate. The difference therefore reflects analyzer content rather than an accidentally disabled loss.
+
 ## Evaluator fidelity check
 
 Before causal training, the same official ALFWorld evaluator compared the authors' released `Jinyang23/Seed-AlfWorld-3B` checkpoint with `Qwen/Qwen2.5-3B-Instruct`. Category-macro success was **89.3%** for the released checkpoint versus **15.8%** for base. The released result is 2.5 points below the paper's 91.8%, supporting evaluator fidelity while leaving normal decoding and subset variance. These were successful Kubernetes runs lasting 6m40s and 8m46s on 8 GPUs each.
@@ -86,8 +100,8 @@ Before causal training, the same official ALFWorld evaluator compared the author
 
 ## Assessment
 
-The reproduction is **partial**: confidence-gated skill-induced OPD improved the fixed seen and unseen endpoints against matched outcome-only GRPO, but it did not improve the observed early-training curve. A full-scale reproduction still needs the original analyzer prompts/model (or a validated equivalent), Qwen2.5-3B, 150 updates, group size 8, broader task coverage, and multiple seeds.
+The reproduction is **partial**: confidence-gated skill-induced OPD improved the primary fixed seen and unseen endpoints against matched outcome-only GRPO, and the lower-λ short run also improved its matched endpoints and curve mean. However, the primary 40-update early-training curve was worse, and raw public-analyzer hindsight lost the endpoint benefit. A full-scale reproduction still needs the original analyzer prompts/model (or a validated equivalent), Qwen2.5-3B, 150 updates, group size 8, broader task coverage, and multiple seeds.
 
-Relevant branches: [matched GRPO control](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/outcome-only-grpo-with-validated-sft-shard), [primary deterministic-fallback SEED](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/seed-opd-with-deterministic-online-analyzer-fall), [released-checkpoint evaluator](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/released-seed-checkpoint), and [base-checkpoint evaluator](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/base-checkpoint-kubernetes-evaluation).
+Relevant branches: [matched GRPO control](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/outcome-only-grpo-with-validated-sft-shard), [primary deterministic-fallback SEED](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/seed-opd-with-deterministic-online-analyzer-fall), [20-update GRPO control](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/outcome-only-grpo-20-update-endpoint), [λ=0.001 sensitivity](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/seed-opd-lambda-0-001-sensitivity), [raw-hindsight sensitivity](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/seed-raw-hindsight-with-regex-import), [released-checkpoint evaluator](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/released-seed-checkpoint), and [base-checkpoint evaluator](https://github.com/alphaXiv/seed-self-evolving-on-policy-distillation-for-ag/tree/orx/base-checkpoint-kubernetes-evaluation).
 
 Sources: [paper (arXiv:2607.14777)](https://arxiv.org/abs/2607.14777), [authors' code](https://github.com/jinyangwu/SEED), and [released checkpoint](https://huggingface.co/Jinyang23/Seed-AlfWorld-3B).

@@ -22,6 +22,29 @@
         "grpo": {"successes": 7, "tasks": 36, "rate": 0.194444},
         "seed_deterministic": {"successes": 9, "tasks": 36, "rate": 0.250000}
       }
+    },
+    "sensitivity": {
+      "seed_lambda_0_001_20_updates": {
+        "trainer_updates": [0, 5, 10, 15, 20],
+        "trainer_validation": [0.021, 0.083, 0.104, 0.083, 0.146],
+        "curve_mean": 0.0884,
+        "seen": {"successes": 8, "tasks": 36, "rate": 0.222222, "category_macro": 0.196759},
+        "unseen": {"successes": 7, "tasks": 36, "rate": 0.194444, "category_macro": 0.178241}
+      },
+      "grpo_20_updates": {
+        "trainer_updates": [0, 5, 10, 15, 20],
+        "trainer_validation": [0.0625, 0.0625, 0.041667, 0.125, 0.083333],
+        "curve_mean": 0.075,
+        "seen": {"successes": 6, "tasks": 36, "rate": 0.166667, "category_macro": 0.138889},
+        "unseen": {"successes": 6, "tasks": 36, "rate": 0.166667, "category_macro": 0.136574}
+      },
+      "seed_raw_hindsight_40_updates": {
+        "trainer_updates": [0, 5, 10, 15, 20, 25, 30, 35, 40],
+        "trainer_validation": [0.020833, 0.083333, 0.0625, 0.145833, 0.041667, 0.145833, 0.083333, 0.083333, 0.208333],
+        "curve_mean": 0.097222,
+        "seen": {"successes": 6, "tasks": 36, "rate": 0.166667, "category_macro": 0.138889},
+        "unseen": {"successes": 6, "tasks": 36, "rate": 0.166667, "category_macro": 0.134259}
+      }
     }
   },
   "checkpoint_sanity": {
@@ -33,10 +56,21 @@
     "seed_run": "43c2689e-c47c-4f22-bad1-9abd7783ff35",
     "base_checkpoint_run": "217bfba7-b913-474e-9f56-fc5aaa794f26",
     "released_checkpoint_run": "a4f40199-2091-43dc-8f95-e7528b86d279",
+    "seed_lambda_0_001_run": "666af157-5d88-425f-931f-f485a99481f0",
+    "grpo_20_update_run": "8fb23951-11ed-46af-889d-6bbb40eed05d",
+    "seed_raw_hindsight_run": "7740b3fc-2b07-40ac-93a2-f6eb6e512d6f",
     "fixed_command": "bash .orx/run.sh",
     "backend": "kubernetes",
     "gpu_model": "NVIDIA RTX PRO 6000 Blackwell",
     "peak_concurrent_gpus": 16,
-    "elapsed_seconds": {"control": 7009, "seed_deterministic": 7723, "base_checkpoint": 526, "released_checkpoint": 400}
+    "elapsed_seconds": {
+      "control": 7009,
+      "seed_deterministic": 7723,
+      "base_checkpoint": 526,
+      "released_checkpoint": 400,
+      "seed_lambda_0_001": 4367,
+      "grpo_20_updates": 4003,
+      "seed_raw_hindsight": 7818
+    }
   }
 }
