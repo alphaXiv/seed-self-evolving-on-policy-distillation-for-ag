@@ -33,7 +33,7 @@ Every formal node uses the exact inherited command shown below. `main` is the pu
 
 The raw-hindsight parent terminated before update 1 because its patch omitted `import re`; the linked corrected child changes only that import. Completed sensitivities show that λ=0.001 improved over its matched 20-update control, while unstructured raw hindsight was weaker than the primary concise fallback. Raw identifiers and full diagnostic histories are retained in OpenResearch experiment descriptions rather than this landing page.
 
-Peak requested concurrency was **16 NVIDIA RTX PRO 6000 Blackwell GPUs on Kubernetes**. The measured reproduction window—from the first successful Kubernetes run start to the last evidence log—was **7.330663 wall hours**. Complete fixed-split JSON and per-run elapsed times are present in terminal logs; plotted transcriptions live in [results.json](reports/seed_reproduction/data/results.json), and [plot_results.py](reports/seed_reproduction/plot_results.py) regenerates both figures.
+Peak requested concurrency was **16 NVIDIA RTX PRO 6000 Blackwell GPUs on Kubernetes**. The queue runner measured **7.480803 hours of observed Kubernetes campaign wall time**. Complete fixed-split JSON and per-run elapsed times are present in terminal logs; plotted transcriptions live in [results.json](reports/seed_reproduction/data/results.json), and [plot_results.py](reports/seed_reproduction/plot_results.py) regenerates both figures.
 
 ## Reproduction harness
 

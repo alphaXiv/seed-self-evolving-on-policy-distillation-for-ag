@@ -260,7 +260,7 @@ def _(mo):
     **Compute:** Kubernetes; NVIDIA RTX PRO 6000 Blackwell; 8 GPUs per arm;
     16 peak concurrent GPUs. The four full causal runs took 1.946944 h and
     1.969167 h for GRPO, and 2.145278 h and 2.178611 h for SEED. The measured
-    reproduction window was 7.330663 wall hours.
+    observed Kubernetes campaign wall time was 7.480803 hours.
 
     **Sources:** [paper](https://arxiv.org/abs/2607.14777) ·
     [authors' code](https://github.com/jinyangwu/SEED) ·

@@ -27,7 +27,7 @@ This reproduction tests the causal comparison rather than only re-running the au
 | Analyzer | GLM-5.2 annotations | public Qwen3 policy + deterministic task-family fallback |
 | Compute | 8 × A800 | Kubernetes; 8 GPUs per arm, 16 peak concurrent NVIDIA RTX PRO 6000 Blackwell GPUs |
 
-The two outcome-only runs took **7,009 seconds (1.946944 h)** and **7,089 seconds (1.969167 h)**; the two SEED runs took **7,723 seconds (2.145278 h)** and **7,843 seconds (2.178611 h)**. Every arm ran on Kubernetes with 8 NVIDIA RTX PRO 6000 Blackwell GPUs. Matched arms overlapped, and the run history records **16 GPUs requested concurrently**. From the first successful Kubernetes run start to the last evidence log, the measured reproduction window was **7.330663 wall hours**.
+The two outcome-only runs took **7,009 seconds (1.946944 h)** and **7,089 seconds (1.969167 h)**; the two SEED runs took **7,723 seconds (2.145278 h)** and **7,843 seconds (2.178611 h)**. Every arm ran on Kubernetes with 8 NVIDIA RTX PRO 6000 Blackwell GPUs. Matched arms overlapped, and the run history records **16 GPUs requested concurrently**. The queue runner measured **7.480803 hours of observed Kubernetes campaign wall time**.
 
 ## Implementation
 

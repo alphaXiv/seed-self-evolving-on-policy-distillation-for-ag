@@ -94,6 +94,7 @@
     "backend": "kubernetes",
     "gpu_model": "NVIDIA RTX PRO 6000 Blackwell",
     "peak_concurrent_gpus": 16,
+    "campaign_wall_hours": 7.480803,
     "elapsed_seconds": {
       "control": 7009,
       "seed_deterministic": 7723,
