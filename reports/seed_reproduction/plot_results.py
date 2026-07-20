@@ -17,7 +17,7 @@ plt.rcParams.update({"font.size": 11, "axes.titleweight": "bold", "figure.dpi": 
 
 
 def save_final_split() -> None:
-    fixed = DATA["bounded_training"]["fixed_evaluation"]
+    fixed = DATA["bounded_training"]["two_seed_pooled"]
     labels = ["Seen", "Unseen"]
     grpo = [fixed["seen"]["grpo"]["rate"], fixed["unseen"]["grpo"]["rate"]]
     seed = [fixed["seen"]["seed_deterministic"]["rate"], fixed["unseen"]["seed_deterministic"]["rate"]]
@@ -34,7 +34,7 @@ def save_final_split() -> None:
     ax.set_ylim(0, 0.34)
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     ax.set_ylabel("ALFWorld task success")
-    ax.set_title("Bounded fixed-split evaluation (36 tasks per split)")
+    ax.set_title("Pooled two-seed fixed-split evaluation (72 trials per arm)")
     ax.legend(frameon=False, loc="upper left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
@@ -47,16 +47,23 @@ def save_training_curve() -> None:
     x = bounded["updates"]
     grpo = bounded["trainer_validation"]["grpo"]
     seed = bounded["trainer_validation"]["seed_deterministic"]
+    second = bounded["second_seed"]["trainer_validation"]
+    grpo_mean = [(a + b) / 2 for a, b in zip(grpo, second["grpo"])]
+    seed_mean = [(a + b) / 2 for a, b in zip(seed, second["seed_deterministic"])]
     fig, ax = plt.subplots(figsize=(7.4, 4.2))
-    ax.plot(x, grpo, marker="o", linewidth=2.3, color=COLORS["grpo"], label="Outcome-only GRPO")
-    ax.plot(x, seed, marker="o", linewidth=2.3, color=COLORS["seed"], label="SEED, public fallback")
+    ax.plot(x, grpo, linewidth=1.1, color=COLORS["grpo"], alpha=0.25)
+    ax.plot(x, second["grpo"], linewidth=1.1, color=COLORS["grpo"], alpha=0.25)
+    ax.plot(x, seed, linewidth=1.1, color=COLORS["seed"], alpha=0.25)
+    ax.plot(x, second["seed_deterministic"], linewidth=1.1, color=COLORS["seed"], alpha=0.25)
+    ax.plot(x, grpo_mean, marker="o", linewidth=2.5, color=COLORS["grpo"], label="Outcome-only GRPO, 2-seed mean")
+    ax.plot(x, seed_mean, marker="o", linewidth=2.5, color=COLORS["seed"], label="SEED, 2-seed mean")
     ax.set_xlim(0, 40)
     ax.set_ylim(0, 0.27)
     ax.yaxis.set_major_formatter(PercentFormatter(1))
     ax.set_xlabel("RL update")
     ax.set_ylabel("48-task trainer-validation success")
     ax.set_title("Early-training curve: the auxiliary signal did not improve area")
-    ax.text(1, 0.245, "curve mean: GRPO 14.5% · SEED 12.3%", fontsize=10)
+    ax.text(1, 0.245, "2-seed curve mean: GRPO 15.0% · SEED 11.9%", fontsize=10)
     ax.grid(axis="y", alpha=0.2)
     ax.legend(frameon=False, loc="lower right")
     ax.spines[["top", "right"]].set_visible(False)

@@ -23,6 +23,35 @@
         "seed_deterministic": {"successes": 9, "tasks": 36, "rate": 0.250000}
       }
     },
+    "second_seed": {
+      "seed": 260714778,
+      "trainer_validation": {
+        "grpo": [0.083333, 0.104167, 0.229167, 0.1875, 0.1875, 0.208333, 0.104167, 0.083333, 0.1875],
+        "seed_deterministic": [0.0625, 0.145833, 0.145833, 0.166667, 0.145833, 0.104167, 0.083333, 0.0625, 0.083333]
+      },
+      "curve_mean": {"grpo": 0.154948, "seed_deterministic": 0.115885},
+      "fixed_evaluation": {
+        "seen": {
+          "grpo": {"successes": 6, "tasks": 36, "rate": 0.166667, "category_macro": 0.138889},
+          "seed_deterministic": {"successes": 5, "tasks": 36, "rate": 0.138889, "category_macro": 0.120370}
+        },
+        "unseen": {
+          "grpo": {"successes": 7, "tasks": 36, "rate": 0.194444, "category_macro": 0.157407},
+          "seed_deterministic": {"successes": 5, "tasks": 36, "rate": 0.138889, "category_macro": 0.115741}
+        }
+      }
+    },
+    "two_seed_pooled": {
+      "curve_mean": {"grpo": 0.149824, "seed_deterministic": 0.119193},
+      "seen": {
+        "grpo": {"successes": 11, "tasks": 72, "rate": 0.152778},
+        "seed_deterministic": {"successes": 13, "tasks": 72, "rate": 0.180556}
+      },
+      "unseen": {
+        "grpo": {"successes": 14, "tasks": 72, "rate": 0.194444},
+        "seed_deterministic": {"successes": 14, "tasks": 72, "rate": 0.194444}
+      }
+    },
     "sensitivity": {
       "seed_lambda_0_001_20_updates": {
         "trainer_updates": [0, 5, 10, 15, 20],
@@ -59,6 +88,8 @@
     "seed_lambda_0_001_run": "666af157-5d88-425f-931f-f485a99481f0",
     "grpo_20_update_run": "8fb23951-11ed-46af-889d-6bbb40eed05d",
     "seed_raw_hindsight_run": "7740b3fc-2b07-40ac-93a2-f6eb6e512d6f",
+    "control_second_seed_run": "0fbab25f-2c01-415f-a6f6-1e0d1160c6ba",
+    "seed_second_seed_run": "1a09c408-a0cd-457e-beb8-d4ad3fcb10d1",
     "fixed_command": "bash .orx/run.sh",
     "backend": "kubernetes",
     "gpu_model": "NVIDIA RTX PRO 6000 Blackwell",
@@ -70,7 +101,9 @@
       "released_checkpoint": 400,
       "seed_lambda_0_001": 4367,
       "grpo_20_updates": 4003,
-      "seed_raw_hindsight": 7818
+      "seed_raw_hindsight": 7818,
+      "control_second_seed": 7089,
+      "seed_second_seed": 7843
     }
   }
 }

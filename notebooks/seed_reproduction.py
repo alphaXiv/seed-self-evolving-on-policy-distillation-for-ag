@@ -25,11 +25,11 @@ def _(mo):
     mo.md(r"""
     # SEED on bounded ALFWorld: measured evidence first
 
-    **Partial reproduction of arXiv:2607.14777.** In matched 40-update
-    Qwen3-1.7B runs, confidence-gated on-policy distillation improved fixed
-    ALFWorld success from **5/36 to 8/36 seen** and **7/36 to 9/36 unseen**.
-    The early-training curve moved in the opposite direction: its mean was
-    12.3% for SEED versus 14.5% for outcome-only GRPO.
+    **Partial reproduction of arXiv:2607.14777.** Across two matched
+    40-update Qwen3-1.7B seeds, confidence-gated on-policy distillation moved
+    pooled fixed seen success from **11/72 to 13/72**, while unseen success
+    tied at **14/72**. The two-seed early-training curve moved in the opposite
+    direction: its mean was 11.9% for SEED versus 15.0% for outcome-only GRPO.
 
     This notebook embeds the completed Kubernetes evidence. It does not ask
     you to rerun expensive training to see the result.
@@ -40,15 +40,15 @@ def _(mo):
 @app.cell
 def _():
     fixed_rows = [
-        {"split": "Seen", "method": "Outcome-only GRPO", "success": 0.138889, "count": "5/36"},
-        {"split": "Seen", "method": "SEED, public fallback", "success": 0.222222, "count": "8/36"},
-        {"split": "Unseen", "method": "Outcome-only GRPO", "success": 0.194444, "count": "7/36"},
-        {"split": "Unseen", "method": "SEED, public fallback", "success": 0.250000, "count": "9/36"},
+        {"split": "Seen", "method": "Outcome-only GRPO", "success": 0.152778, "count": "11/72"},
+        {"split": "Seen", "method": "SEED, public fallback", "success": 0.180556, "count": "13/72"},
+        {"split": "Unseen", "method": "Outcome-only GRPO", "success": 0.194444, "count": "14/72"},
+        {"split": "Unseen", "method": "SEED, public fallback", "success": 0.194444, "count": "14/72"},
     ]
     curve_rows = []
     updates = [0, 5, 10, 15, 20, 25, 30, 35, 40]
-    grpo = [0.042, 0.104, 0.146, 0.146, 0.104, 0.167, 0.188, 0.167, 0.229]
-    seed = [0.042, 0.083, 0.021, 0.125, 0.146, 0.146, 0.146, 0.188, 0.208]
+    grpo = [0.0625, 0.1041, 0.1876, 0.1668, 0.1458, 0.1877, 0.1461, 0.1252, 0.2083]
+    seed = [0.0521, 0.1146, 0.0834, 0.1458, 0.1459, 0.1251, 0.1146, 0.1253, 0.1457]
     for step, grpo_value, seed_value in zip(updates, grpo, seed):
         curve_rows.extend(
             [
@@ -75,9 +75,9 @@ def _(alt, fixed_rows, mo):
             column=alt.Column("split:N", title=None),
             tooltip=["split:N", "method:N", alt.Tooltip("success:Q", format=".1%"), "count:N"],
         )
-        .properties(width=240, height=300, title="Fixed 36-task evaluations")
+        .properties(width=240, height=300, title="Pooled two-seed fixed evaluations")
     )
-    mo.vstack([final_chart, mo.md("Seen **+8.3 points** · unseen **+5.6 points** for SEED.")])
+    mo.vstack([final_chart, mo.md("Seen **+2.8 points** · unseen **0.0 points** for SEED.")])
     return
 
 
@@ -101,7 +101,7 @@ def _(alt, curve_rows, mo):
         [
             mo.md("## The endpoint gain did not come with early sample efficiency"),
             curve_chart,
-            mo.callout("Curve mean: GRPO 14.5%, SEED 12.3% (−2.2 points).", kind="warn"),
+            mo.callout("Two-seed curve mean: GRPO 15.0%, SEED 11.9% (−3.1 points).", kind="warn"),
         ]
     )
     return
@@ -136,20 +136,20 @@ def _():
         {
             "claim": "Seen success",
             "paper": "75.0% GRPO → 91.8% SEED (+16.8 pt)",
-            "observed": "13.9% → 22.2% (+8.3 pt)",
-            "assessment": "directionally aligned; partial",
+            "observed": "pooled 15.3% → 18.1% (+2.8 pt)",
+            "assessment": "weak direction; partial",
         },
         {
             "claim": "Early sample efficiency",
             "paper": "SEED higher across training fractions",
-            "observed": "curve mean 14.5% GRPO vs 12.3% SEED",
+            "observed": "2-seed curve mean 15.0% GRPO vs 11.9% SEED",
             "assessment": "not aligned in this setup",
         },
         {
             "claim": "Unseen split",
             "paper": "70.9% GRPO → 86.2% SEED (+15.3 pt)",
-            "observed": "19.4% → 25.0% (+5.6 pt)",
-            "assessment": "directionally aligned; partial",
+            "observed": "pooled 19.4% → 19.4% (0.0 pt)",
+            "assessment": "inconclusive under this setup",
         },
     ]
     return (claims,)
@@ -255,11 +255,12 @@ def _(mo):
 
     Other downscaling: Qwen3-1.7B instead of Qwen2.5-3B, 40 instead of 150
     updates, group size 4 instead of 8, 16 bounded training tasks, 36 tasks per
-    final split, and one seed.
+    final split per seed, and two full causal seeds.
 
     **Compute:** Kubernetes; NVIDIA RTX PRO 6000 Blackwell; 8 GPUs per arm;
-    16 peak concurrent GPUs. GRPO took 1.946944 h and primary SEED took
-    2.145278 h.
+    16 peak concurrent GPUs. The four full causal runs took 1.946944 h and
+    1.969167 h for GRPO, and 2.145278 h and 2.178611 h for SEED. The measured
+    reproduction window was 7.330663 wall hours.
 
     **Sources:** [paper](https://arxiv.org/abs/2607.14777) ·
     [authors' code](https://github.com/jinyangwu/SEED) ·
