@@ -1,15 +1,1 @@
-{
-  "schemaVersion": 1,
-  "paperId": "2607.14777",
-  "title": "SEED on bounded ALFWorld",
-  "description": "Across two bounded seeds, SEED retained a small pooled seen gain, tied GRPO unseen, and had worse early-training efficiency.",
-  "verdict": "partially-reproduced",
-  "reportPath": "reports/seed_reproduction/report.md",
-  "notebookPath": "notebooks/seed_reproduction.py",
-  "compute": {
-    "backend": "kubernetes",
-    "gpuModel": "NVIDIA RTX PRO 6000 Blackwell",
-    "gpuCount": 16,
-    "wallHours": 7.480803
-  }
-}
+{"schemaVersion":1,"paperId":"2607.14777","title":"Bounded SEED ALFWorld reproduction","description":"Across two bounded matched seeds, SEED had small positive mean final effects that reversed on the second seed and lower early-training macro-AUC.","verdict":"partially-reproduced","reportPath":"reports/seed_reproduction/report.md","notebookPath":"notebooks/seed_reproduction.py","compute":{"backend":"kubernetes","gpuModel":"NVIDIA RTX PRO 6000 Blackwell","gpuCount":16,"wallHours":7.480803}}
