@@ -169,7 +169,7 @@ export DEFAULT_LOCAL_DIR="$rl_output"
 rm -rf "$rl_output"
 bash examples/seed_trainer/_common/alfworld.sh \
   "trainer.logger=['console']" \
-  trainer.seed=260714778 env.seed=260714778 \
+  +trainer.seed=260714778 env.seed=260714778 \
   trainer.total_epochs="$TOTAL_UPDATES" \
   trainer.save_freq=10 trainer.test_freq=5 trainer.val_before_train=True \
   trainer.max_actor_ckpt_to_keep=2 \
