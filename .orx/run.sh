@@ -30,6 +30,7 @@ echo "sft_rollouts_per_task=$SFT_ROLLOUTS_PER_TASK"
 echo "train_tasks=$TRAIN_DATA_SIZE"
 echo "rollout_group=$GROUP_SIZE"
 echo "updates=$TOTAL_UPDATES"
+echo "rl_seed=1"
 echo "seen_eval_tasks=$FINAL_EVAL_TASKS"
 echo "unseen_eval_tasks=$FINAL_EVAL_TASKS"
 echo "analyzer_substitution=Qwen/Qwen3-1.7B served locally at temperature 0; deterministic rule fallback"
@@ -168,6 +169,7 @@ export DEFAULT_LOCAL_DIR="$rl_output"
 rm -rf "$rl_output"
 bash examples/seed_trainer/_common/alfworld.sh \
   "trainer.logger=['console']" \
+  trainer.seed=1 env.seed=1 \
   trainer.total_epochs="$TOTAL_UPDATES" \
   trainer.save_freq=10 trainer.test_freq=5 trainer.val_before_train=True \
   trainer.max_actor_ckpt_to_keep=2 \
