@@ -2,6 +2,14 @@ diff --git a/verl/trainer/ppo/ray_trainer.py b/verl/trainer/ppo/ray_trainer.py
 index 19c2762..1c10420 100755
 --- a/verl/trainer/ppo/ray_trainer.py
 +++ b/verl/trainer/ppo/ray_trainer.py
+@@ -20,6 +20,7 @@ This trainer supports model-agonistic model initialization with huggingface
+ import json
+ import logging
+ import os
++import re
+ import uuid
+ from concurrent.futures import ThreadPoolExecutor, as_completed
+ from collections import defaultdict
 @@ -2141,6 +2141,37 @@ class RayPPOTrainer:
                  "step_skills": {},
              }
